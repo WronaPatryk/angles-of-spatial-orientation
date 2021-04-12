@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import numpy as np
-import pandas as pd
 
 def qa(THETA, PSI, FI):
     def qa0(THETA, PSI, FI):

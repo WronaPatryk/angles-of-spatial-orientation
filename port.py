@@ -2,6 +2,9 @@ import serial
 import time
 from threading import Thread
 
+def disect_output(s):
+    print([ float(x) for i, x in enumerate(str(s).replace('g', '').split(' '))  if i % 2 != 0 ])
+
 class SerialRead:
     def __init__(self, serial_port = '', serial_baud = ''):
         self.sp = serial_port
@@ -12,7 +15,6 @@ class SerialRead:
         self.rec = False    # IS RECEIVING
         self.run = True     # IS RUNNING
 
-        self.data = []
 
         print('Trying to connect to: ' + str(serial_port) + ' at ' + str(serial_baud) + ' BAUD.')
 
@@ -35,9 +37,8 @@ class SerialRead:
             time.sleep(1.0)  
             self.sc.reset_input_buffer()
             while (self.run):
-                #self.sc.readinto(self.data)
                 self.rec = True
-                print(self.sc.readline())
+                disect_output(self.sc.readline())
 
     def close(self):
         self.run = False
@@ -45,8 +46,6 @@ class SerialRead:
         self.sc.close()
         print('DISCONNECTED')
         
-
-
 
 def port_config():
     serial_port = '/dev/ttyACM0'
@@ -58,4 +57,3 @@ def port_config():
 
 
 port_config()
-    

@@ -45,7 +45,7 @@ def getEulerAngles(q):
     pitch = rad2deg(pitch)
     roll = rad2deg(roll)
 
-    return yaw, pitch, roll
+    return yaw+180, pitch+180, roll+180
 
 def normalize_quat(q):
         mag = (q[0]**2 + q[1]**2 + q[2]**2 + q[3]**2)**0.5
@@ -66,26 +66,30 @@ def S_quat(q):
 
 class EKF():
 
-    def __init__(self):
-        x = np.array([1, 0, 0, 0, 0, 0, 0])
+    def __init__(self, accelref = [0, 0, -1], bias = [0,0,0], dt = 1):
 
-        self.xHat = x.transpose()
+        quaternion = np.array([1, 0, 0, 0])     # Initial estimate of the quaternion
+        self.xHat = np.concatenate((quaternion, bias)).transpose()
+
+        self.yHatBar = np.zeros(3).transpose()
         self.Pk = np.identity(7) * 0.01
 
-        self.Q = np.identity(7) * 0.001
-        self.R = np.identity(3) * 0.1
+        self.Q = np.identity(7) * 0.00001
+        self.R = np.identity(3) * 0.01
 
-        self.dt = 1
+        self.dt = dt
 
         self.xHatBar = None
         self.PkBar = None
         self.xHatPrev = None
+        self.K = None
 
         self.A = None
         self.B = None
         self.C = None
+        
 
-        self.accelref = np.array([0, 0, -1]).transpose()
+        self.accelref = np.array(accelref).transpose()
 
 
     #predict funcs
@@ -165,7 +169,7 @@ class EKF():
 
         self.C = self.C_matrix()
 
-        K = self.get_K()
-        self.xHat = self.get_xHat(K, a)
-        self.Pk = self.get_Pk(K)
+        self.K = self.get_K()
+        self.xHat = self.get_xHat(self.K, a)
+        self.Pk = self.get_Pk(self.K)
         

@@ -11,42 +11,26 @@ def basic_test():
     print("BASIC TEST DONE")
 
 
-def show_case_test(omega, a):
+def basic_case_test(omega, a):
+
+    ekf = EKF.EKF()
+    ekf.predict(omega)
+    ekf.update(a)
+
+    print('Yaw: %.5f; Pitch: %.5f; Roll: %.5f' % EKF.getEulerAngles(ekf.xHat[0:4]))
+
+    print("CASE TEST DONE\n")
+
+def loop_case_test(omega, steps):
 
     ekf = EKF.EKF()
 
-    print('PREDICT')
-    ekf.predict(omega)
-    #print(100*np.abs(ekf.xHatBar - predict_ans[0])/predict_ans[0])
-    #print(100*np.abs(ekf.PkBar - predict_ans[1])/predict_ans[1]
-    print('A matrix')
-    print(ekf.A)
+    for dt in range(steps):
+        ekf.predict(omega)
+        ekf.update([-np.sin(-omega[1]*(dt+1)),0,-np.cos(-omega[1]*(dt+1))])
+        print('Yaw: %.5f; Pitch: %.5f; Roll: %.5f' % EKF.getEulerAngles(ekf.xHat[0:4]))
 
-    print('B matrix')
-    print(ekf.B)
-
-
-
-    print('xHatBar')
-    print(ekf.xHatBar)
-    print('PkBar')
-    print(ekf.PkBar)
-
-    print('PREDICT')
-    ekf.update(a)
-    #print(100*np.abs(ekf.K - update_ans[0])/update_ans[0])
-    #print(100*np.abs(ekf.xHat - update_ans[1])/update_ans[1])
-    #print(100*np.abs(ekf.PkBar - update_ans[2])/update_ans[2])
-    print('K')
-    print(ekf.K)
-    print('xHat')
-    print(ekf.xHat)
-    print('PkBar')
-    print(ekf.PkBar)
-    print(EKF.getEulerAngles(ekf.xHat[0:4]))
-
-    print("CASE TEST DONE")
-
+    print("CASE TEST DONE\n")
 
 
     
@@ -54,7 +38,12 @@ def show_case_test(omega, a):
 
 def run_tests():
     basic_test()
-    show_case_test([0,-1,0],[-np.sin(1),0,-np.cos(1)] )
+    basic_case_test([0,-1,0],[-np.sin(1),0,-np.cos(1)] )
 
 
-show_case_test([0,-1,0],[-np.sin(1),0,-np.cos(1)] )
+basic_case_test([0,-1,0],[-np.sin(1),0,-np.cos(1)] )
+basic_case_test([0,0,0],[0,0,-1] )
+
+
+#loop_case_test([0, 10*np.pi/180, 0], 5)
+loop_case_test([0, 10*np.pi/180, 0], 9)

@@ -41,11 +41,15 @@ def getEulerAngles(q):
         pitch = np.arcsin(-m[2, 0])
         roll = np.arctan2(m[2, 1], m[2, 2])
 
-    yaw = rad2deg(yaw)
+    yaw = rad2deg(yaw) 
     pitch = rad2deg(pitch)
     roll = rad2deg(roll)
 
-    return yaw+180, pitch+180, roll+180
+    if yaw < 0 : yaw+=360
+    if pitch < 0 : pitch+=360
+    if roll < 0 : roll+=360
+
+    return yaw, pitch, roll
 
 def normalize_quat(q):
         mag = (q[0]**2 + q[1]**2 + q[2]**2 + q[3]**2)**0.5

@@ -23,7 +23,7 @@ class SerialRead:
         self.rec = False    # IS RECEIVING
         self.run = True     # IS RUNNING
 
-        self.ekf = EKF.EKF(getAccelVector([-1.00513, 0.01831, -0.19238]), [-0.30534, -0.81679, -0.38168], 0.1)
+        self.ekf = EKF.EKF(getAccelVector([1.00513, -0.01831, 0.19238]), [-0.30534*np.pi/180, -0.81679*np.pi/180, -0.48168*np.pi/180], 0.1)
 
 
         print('Trying to connect to: ' + str(serial_port) + ' at ' + str(serial_baud) + ' BAUD.')
@@ -43,6 +43,16 @@ class SerialRead:
                 time.sleep(0.1)
 
 
+    def process_output(self, output):
+        self.ekf.predict([output[3]*np.pi/180, output[4]*np.pi/180, output[5]*np.pi/180])
+        self.ekf.update([output[0], output[1], output[2]])
+        num = EKF.getEulerAngles(self.ekf.xHat[0:4])
+        print('------------------------------')
+        print('Gx: %.5f; Gy: %.5f; Gz: %.5f' % (output[3], output[4], output[5]))
+        print('Ax: %.5f; Ay: %.5f; Az: %.5f' % (output[0], output[1], output[2]))
+        print('Yaw: %.5f; Pitch: %.5f; Roll: %.5f' % num)
+
+
     def back_thread(self):   
             time.sleep(1.0)  
             self.sc.reset_input_buffer()
@@ -50,10 +60,8 @@ class SerialRead:
                 self.rec = True
                 output = disect_output(self.sc.readline())
                 #print(output)
-                self.ekf.predict([output[3], output[4], output[5]])
-                self.ekf.update([output[0], output[1], output[2]])
-                print(EKF.getEulerAngles(self.ekf.xHat[0:4]))
-                print(self.ekf.xHat[4:7])
+                self.process_output(output)
+                #print(self.ekf.xHat[4:7])
 
     def close(self):
         self.run = False

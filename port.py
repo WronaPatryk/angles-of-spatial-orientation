@@ -3,6 +3,8 @@ import time
 from threading import Thread
 import EKF as EKF
 import numpy as np
+from itertools import count
+import csv
 
 def disect_output(s):
     return([ float(x) for i, x in enumerate(str(s).replace('g', '').split(' '))  if i % 2 != 0 ])
@@ -22,6 +24,14 @@ class SerialRead:
 
         self.rec = False    # IS RECEIVING
         self.run = True     # IS RUNNING
+
+        self.file_writer = csv.writer(open('data/output.csv', mode='w'), delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+        self.YAW = []
+        self.PITCH = []
+        self.ROLL = []
+
+        self.start_time = 0
 
         self.ekf = EKF.EKF(getAccelVector([1.00513, -0.01831, 0.19238]), [-0.30534*np.pi/180, -0.81679*np.pi/180, -0.48168*np.pi/180], 0.1)
 
@@ -52,10 +62,14 @@ class SerialRead:
         print('Ax: %.5f; Ay: %.5f; Az: %.5f' % (output[0], output[1], output[2]))
         print('Yaw: %.5f; Pitch: %.5f; Roll: %.5f' % num)
 
+        self.file_writer.writerow([time.time() - self.start_time]+list(num))
+
 
     def back_thread(self):   
             time.sleep(1.0)  
             self.sc.reset_input_buffer()
+            self.start_time = time.time()
+
             while (self.run):
                 self.rec = True
                 output = disect_output(self.sc.readline())

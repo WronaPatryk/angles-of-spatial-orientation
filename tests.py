@@ -56,5 +56,5 @@ def run_tests():
 
 #loop_case_test([0, 10*np.pi/180, 0], 5)
 #loop_case_test([0, 10*np.pi/180, 0], 9)
-loop_case_with_noise([0, 0, 0], 1000, [0.001, 0.001, 0.001])
+#loop_case_with_noise([0, 0, 0], 1000, [0.001, 0.001, 0.001])
 

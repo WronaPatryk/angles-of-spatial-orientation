@@ -45,10 +45,6 @@ def getEulerAngles(q):
     pitch = rad2deg(pitch)
     roll = rad2deg(roll)
 
-    if yaw < 0 : yaw+=360
-    if pitch < 0 : pitch+=360
-    if roll < 0 : roll+=360
-
     return yaw, pitch, roll
 
 def normalize_quat(q):
@@ -78,8 +74,8 @@ class EKF():
         self.yHatBar = np.zeros(3).transpose()
         self.Pk = np.identity(7) * 0.01
 
-        self.Q = np.identity(7) * 0.00001
-        self.R = np.identity(3) * 0.01
+        self.Q = np.identity(7) * 0.01
+        self.R = np.identity(3) * 0.1
 
         self.dt = dt
 

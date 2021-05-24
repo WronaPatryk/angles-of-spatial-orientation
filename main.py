@@ -3,66 +3,74 @@ import csv
 import EKF as EKF
 import numpy as np
 
-def read_case(inpath, outpath):
+
+def approx_error(real, sim):
+    def apx(x,y):
+        return abs((x-y)/x)
+    return (apx(real[0], sim[0]),apx(real[1], sim[1]), apx(real[2], sim[2]) )
+
+
+def read_case(inpath, outpath, ekf):
+
+    start_time = 0
 
     g = 9.80665
 
-    BAx = -0.21775/g
-    BAy = -0.16934/g
-    BAz = -9.76653/g
-
-    #file_writer = csv.writer(open(outpath, mode='w'), delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    file_writer = csv.writer(open(outpath, mode='w'), delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
     file_reader = csv.reader(open(inpath) , delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
     line_count = 0
-
-    accelref = [BAx, BAy, BAz]
-
-    accel = np.array(accelref).transpose()
-    accelMag = (accel[0] ** 2 + accel[1] ** 2 + accel[2] ** 2) ** 0.5
-
-    accelref = accel / accelMag
-
-    print(accelref)
-
-
-
-    ekf = EKF.EKF( dt = 0.02)
-
-    bYAW = 80.97758
-    bPITCH = 1.961 # Pochylanie THETA 
-    bROLL = -1.371 # Przechylanie FI
 
     for row in file_reader:
         if line_count == 0:
             print('------------------------------')
+            old_time = 0
         else:
+
             time = float(row[0])
 
-            Ax = float(row[1])/g
-            Ay = float(row[2])/g
-            Az = float(row[3])/g
+            if(time >= start_time):
 
-            Gx = float(row[4])
-            Gy = float(row[5])
-            Gz = float(row[6])
+                dt = time - old_time
 
-            ekf.predict([Gx * np.pi/180, Gy * np.pi/180, Gz * np.pi/180])
-            ekf.update([Ax, Ay, Az])
-            num = EKF.getEulerAngles(ekf.xHat[0:4])
+                ekf.set_step(dt)
 
-            print('------------------------------')
-            print('Gx: %.5f deg/s; Gy: %.5f deg/s; Gz: %.5f deg/s' % (Gx, Gy, Gz))
-            print('Ax: %.5fg; Ay: %.5fg; Az: %.5fg' % (Ax, Ay, Az))
-            print('Yaw: %.5f; Pitch: %.5f; Roll: %.5f' % num)
-            print('RYaw: %.5f; RPitch: %.5f; RRoll: %.5f' % (float(row[14]) - bYAW, float(row[8]) , float(row[7]) ))
+                old_time = time
+
+                Ax = float(row[1])/g
+                Ay = float(row[2])/g
+                Az = float(row[3])/g
+
+                Q = float(row[4])
+                P = float(row[5])
+                R = float(row[6])
+
+                rangles = (float(row[14]), float(row[8]) , float(row[7]))
+
+                ekf.predict([P * np.pi/180, Q * np.pi/180, R * np.pi/180])
+                ekf.update([Ax, Ay, Az])
+                num = EKF.getEulerAngles(ekf.xHat[0:4])
+
+                aerror = approx_error(rangles, num)
+
+                print('------------------------------')
+                print('Time: %.5f sek; dt: %.5f sek' %(time, dt))
+                print('Gx: %.5f deg/s; Gy: %.5f deg/s; Gz: %.5f deg/s' % (P, Q, R))
+                print('Ax: %.5fg; Ay: %.5fg; Az: %.5fg' % (Ax, Ay, Az))
+                print('Yaw: %.5f; Pitch: %.5f; Roll: %.5f' % num)
+                print('RYaw: %.5f; RPitch: %.5f; RRoll: %.5f' %  rangles)
+                print('EYaw: %.5f; EPitch: %.5f; ERoll: %.5f' %   aerror )
+
+                file_writer.writerow([time]+ list(num) + list(rangles) + list(aerror))
+
+                if(line_count > 5000): break
 
             
         line_count += 1
 
-        if(line_count > 100): break
-
-
+        
 
 if __name__ == '__main__':
 
-    read_case("data/testdata.csv","testout.csv")
+    ekf = EKF.EKF(dt = 0.02, qqgain=0.01, qbgain=100, rgain=0.1)
+
+    read_case("data/testdata.csv","data/testout_Q0001R01.csv",ekf)

@@ -66,7 +66,13 @@ def S_quat(q):
 
 class EKF():
 
-    def __init__(self, accelref = [0, 0, -1], bias = [0,0,0], dt = 1):
+    def __init__(self, 
+                accelref = [0, 0, -1], 
+                bias = [0,0,0], 
+                dt = 1, 
+                qqgain = 0.01,
+                qbgain = 0.01, 
+                rgain = 0.1):
 
         quaternion = np.array([1, 0, 0, 0])     # Initial estimate of the quaternion
         self.xHat = np.concatenate((quaternion, bias)).transpose()
@@ -74,8 +80,11 @@ class EKF():
         self.yHatBar = np.zeros(3).transpose()
         self.Pk = np.identity(7) * 0.01
 
-        self.Q = np.identity(7) * 0.01
-        self.R = np.identity(3) * 0.1
+        self.Q = np.concatenate((np.concatenate((np.identity(4) *qqgain, np.zeros((4,3))), axis=1),
+                        np.concatenate((np.zeros((3, 4)), np.identity(3) * qbgain), axis=1)), 
+                        axis=0)
+
+        self.R = np.identity(3) * rgain
 
         self.dt = dt
 
@@ -91,6 +100,9 @@ class EKF():
 
         self.accelref = np.array(accelref).transpose()
 
+
+    def set_step(self, ndt):
+        self.dt = ndt
 
     #predict funcs
     def A_matrix(self):

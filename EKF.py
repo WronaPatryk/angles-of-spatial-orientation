@@ -28,11 +28,11 @@ def getRotMat(q):
 def getEulerAngles(q):
     m = getRotMat(q)
     test = -m[2, 0]
-    if test > 0.99999:
+    if test > 0.9999999999:
         yaw = 0
         pitch = np.pi / 2
         roll = np.arctan2(m[0, 1], m[0, 2])
-    elif test < -0.99999:
+    elif test < -0.9999999999:
         yaw = 0
         pitch = -np.pi / 2
         roll = np.arctan2(-m[0, 1], -m[0, 2])
@@ -46,6 +46,33 @@ def getEulerAngles(q):
     roll = rad2deg(roll)
 
     return yaw, pitch, roll
+
+
+# def CGH(q):
+#     return np.array([[2 * (q[0]**2 + q[1]**2) - 1,     2 * (q[1] * q[2] - q[0]*q[3]),    2 * (q[1] * q[3] + q[0]*q[2])],
+#                      [2 * (q[1] * q[2] + q[0]*q[3]),   2 * (q[0]**2 + q[2]**2) - 1 ,     2 *(q[2] * q[3] - q[0]*q[1])],
+#                      [2 * (q[1] * q[3] - q[0]*q[2]),   2 *(q[2] * q[3] + q[0]*q[1]),     2 * (q[0]**2 + q[3]**2) - 1]]) 
+
+
+# def TFP(CGH):
+#    def THETA(CGH):
+#        return np.arcsin(- CGH[0][2])
+   
+#    def FI(CGH):
+#        return -2 * np.arctan(CGH[1][2]/(CGH[2][2] + np.cos(np.arcsin(- CGH[0][2]))))
+    
+#    def PSI(CGH):
+#        return -2 * np.arctan(CGH[0][1]/(CGH[0][0] + np.cos(np.arcsin(- CGH[0][2]))))
+   
+#    return [THETA(CGH), PSI(CGH), FI(CGH)]
+
+
+# def getEulerAngles(q):
+#     cgh = CGH(q)
+
+#     angs = TFP(cgh)
+
+#     return rad2deg(angs[1]), rad2deg(angs[0]), rad2deg(angs[2])
 
 def normalize_quat(q):
         mag = (q[0]**2 + q[1]**2 + q[2]**2 + q[3]**2)**0.5

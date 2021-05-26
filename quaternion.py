@@ -18,7 +18,7 @@ def qa(THETA, PSI, FI):
     return [qa0(THETA,PSI,FI), qa1(THETA,PSI,FI), qa2(THETA,PSI,FI), qa3(THETA,PSI,FI)]       
 
 
-def qb(wx, wy, wz, dt = 0.005):
+def qb(wx, wy, wz, dt = 1):
     w = np.sqrt(wx**2 + wy**2 + wz**2)
     
     fi0 = w * dt
@@ -52,16 +52,16 @@ def CGH(q):
 
 
 def TFP(CGH):
-    def THETA(CGH):
-        return np.arcsin(- CGH[0][2])
+   def THETA(CGH):
+       return np.arcsin(- CGH[0][2])
+   
+   def FI(CGH):
+       return -2 * np.arctan(CGH[1][2]/(CGH[2][2] + np.cos(np.arcsin(- CGH[0][2]))))
     
-    def FI(CGH):
-        return -2 * np.arctan(CGH[1][2]/(CGH[2][2] + np.cos(np.arcsin(- CGH[0][2]))))
-    
-    def PSI(CGH):
-        return -2 * np.arctan(CGH[0][1]/(CGH[0][0] + np.cos(np.arcsin(- CGH[0][2]))))
-    
-    return [THETA(CGH), PSI(CGH), FI(CGH)]
+   def PSI(CGH):
+       return -2 * np.arctan(CGH[0][1]/(CGH[0][0] + np.cos(np.arcsin(- CGH[0][2]))))
+   
+   return [THETA(CGH), PSI(CGH), FI(CGH)]
 
 
 def not_ort_err(q):
@@ -71,8 +71,25 @@ def q_length(q):
     return np.sqrt(q[0]**2 + q[1]**2 + q[2]**2 + q[3]**2)
 
 
-def quaternion(q_a, P, Q, R):
-    q_b = qb(P, Q, R) 
-    q = qq(q_a, q_b)
-    tfp = TFP(CGH(q))
-    return [q, tfp[0], tfp[1], tfp[2], not_ort_err(q), q_length(q)]          
+
+def S_omega(omega):
+    return np.array([   [0, -omega[0], -omega[1], -omega[2]],
+                        [omega[0], 0 , omega[2], -omega[1]],
+                        [omega[1], -omega[2], 0 , omega[0]],
+                        [omega[2], omega[1], -omega[0], 0]])
+
+def S_quat(q):
+    return np.array([   [-q[1], -q[2], -q[3]],
+                        [q[0], -q[3], q[2]],
+                        [q[3], q[0], -q[1]],
+                        [-q[2], q[1], q[0]]])
+
+
+
+def quaternion(q_a, omega):
+    if((omega [0] == 0) and (omega[1] == 0) and (omega[2] == 0)):
+        return[q_a, not_ort_err(q_a), q_length(q_a)]
+    else:
+        q_b = qb(omega [0], omega[1], omega[2]) 
+        q = qq(q_a, q_b)
+        return [q, not_ort_err(q), q_length(q)]          

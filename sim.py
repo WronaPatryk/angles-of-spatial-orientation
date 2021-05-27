@@ -8,13 +8,16 @@ import csv
 
 import errors
 
+def roundlst(lst,r):
+    return list(map(lambda x : round(x, r), lst))
+
 class Sensor:
     def __init__(self, 
-                gnoise_mu = [0, 0, 0], 
-                gnoise_std = [[0.001, 0, 0], [0, 0.001, 0], [0,0,0.001]],
-                bias = 0, 
-                anoise_mu = [0, 0, 0],
-                anoise_std = [[0.001, 0, 0], [0, 0.001, 0], [0,0,0.001]]):
+                gnoise_mu = [0.00013, 0.00104, 0.00001], 
+                gnoise_std = [[0.00426**2, 0, 0], [0, 0.00438**2, 0], [0,0,0.001**2]],
+                bias = [0.01 * np.pi/180 , 0.009 * np.pi/180, 0.012 * np.pi/180], 
+                anoise_mu = [0.00032, -0.00026, 0.0001],
+                anoise_std = [[0.00065**2,0,0], [0, 0.00058**2,0], [0,0,0.0001*2]]):
                 
         self.gnoise_mu = gnoise_mu
         self.gnoise_std = gnoise_std
@@ -24,23 +27,39 @@ class Sensor:
         self.anoise_mu = anoise_mu
         self.anoise_std = anoise_std
 
-    def gen_omega(self, omega):
+    def gen_omega(self, omega, dt):
 
         x, y, z = np.random.multivariate_normal(self.gnoise_mu, self.gnoise_std ).T
 
         #return [ omega[0] *(1+self.gnoise_std[0][0]*x), omega[1]*(1+self.gnoise_std[1][1]*y), omega[2]*(1+self.gnoise_std[2][2]*z) ]
 
-        return [ omega[0] + self.gnoise_std[0][0]*x, omega[1] +self.gnoise_std[1][1]*y , omega[2]+self.gnoise_std[2][2]*z ]
+        return [ omega[0] + omega[0] * x + self.bias[0]*dt, omega[1] + omega[1]*y + self.bias[1]*dt , omega[2]+ omega[2]*z + self.bias[1]*dt]
 
 
     def gen_accel(self, a):
         x, y, z = np.random.multivariate_normal(self.anoise_mu, self.anoise_std ).T
 
         #return [ a[0] *(1+self.anoise_std[0][0]*x), a[1]*(1+self.anoise_std[1][1]*y), a[2]*(1+self.anoise_std[2][2]*z) ]
-        return [ a[0] +self.anoise_std[0][0]*x, a[1]+self.anoise_std[1][1]*y, a[2]+self.anoise_std[2][2]*z ]
+        #return [ a[0] +self.anoise_std[0][0]*x, a[1]+self.anoise_std[1][1]*y, a[2]+self.anoise_std[2][2]*z ]
+
+        #dR = np.sqrt(x**2 + y**2 + z**2)
+
+        #return [ a[0] + x/dR, a[1] + y/dR, a[2] + z/dR ]
+
+        #return [ a[0] + a[0] * x/dR, a[1] +a[1] * y/dR, a[2] + a[2] * z/dR ]
+
+        #return [ a[0] + a[0] * x/dR, a[1] +a[1] * y/dR, a[2] + a[2] * z/dR ]
+
+        return [ a[0] +x * a[0], a[1]+y * a[1], a[2] + z * a[2]]
+
+        #return [ a[0] +x * a[0] +y * a[1]  + z * a[2] , a[1] + x * a[0] +y * a[1]  + z * a[2], a[2] + x * a[0] +y * a[1]  + z * a[2]]
 
 
-    def get_from_omega(self, omega, bquat, fbquat):
+    def get_from_omega(self, omega, bquat, fbquat, dt):
+
+        r = 10
+
+        omega = roundlst(omega, r)
 
         ans = quat.quaternion(bquat, omega)
 
@@ -48,21 +67,21 @@ class Sensor:
 
         
 
-        fomega = self.gen_omega(omega)
+        fomega = roundlst(self.gen_omega(omega, dt), r)
 
         fans = quat.quaternion(fbquat, fomega)
 
-        fangs = EKF.getEulerAngles(fans[0])
+        #fangs = EKF.getEulerAngles(fans[0])
 
 
 
-        raccel = vmath.nvec(rangs)
+        raccel = roundlst(vmath.nvec(rangs), r)
 
         #faccel = self.gen_accel(raccel)
 
         #faccel = vmath.nvec(fangs)
 
-        faccel = self.gen_accel(vmath.nvec(fangs))
+        faccel = roundlst(self.gen_accel(raccel),r)
 
         return (ans[0],fans[0], fomega, faccel,raccel, rangs)
 
@@ -79,7 +98,7 @@ def loop_case_test(omega, steps):
 
     for dt in range(steps):
 
-        bquat, fbquat, fomega, faccel, raccel, rangs  = sim.get_from_omega(omega, bquat, fbquat)
+        bquat, fbquat, fomega, faccel, raccel, rangs  = sim.get_from_omega(omega, bquat, fbquat,dt)
 
 
         ekf.predict(fomega)
@@ -101,8 +120,9 @@ def loop_case_test(omega, steps):
         #file_writer.writerow( list(num) + list(rangs) + list(cerror))
         #file_writer.writerow(list(omega) + list(fomega) + list (raccel) + list(faccel) + list(omerror)+ list(accerror)+list(cerror))
         #file_writer.writerow( list(cerror))
+        #file_writer.writerow( list(omerror)+ list(accerror)+list(cerror))
         file_writer.writerow(list(rangs)+list(num))
 
 
 
-loop_case_test([0 * np.pi/180, 0 * np.pi/180, 0 * np.pi/180], 179)
+loop_case_test([1 * np.pi/180, 1 * np.pi/180, 1 * np.pi/180], 2900)

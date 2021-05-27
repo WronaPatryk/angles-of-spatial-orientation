@@ -5,6 +5,7 @@ import EKF as EKF
 import numpy as np
 from itertools import count
 import csv
+import errors
 
 def disect_output(s):
     return([ float(x) for i, x in enumerate(str(s).replace('g', '').split(' '))  if i % 2 != 0 ])
@@ -25,7 +26,7 @@ class SerialRead:
         self.rec = False    # IS RECEIVING
         self.run = True     # IS RUNNING
 
-        self.file_writer = csv.writer(open('data/output.csv', mode='w'), delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        self.file_writer = csv.writer(open('data/GandA.csv', mode='w'), delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
         self.YAW = []
         self.PITCH = []
@@ -33,7 +34,7 @@ class SerialRead:
 
         self.start_time = 0
 
-        self.ekf = EKF.EKF(getAccelVector([1.00513, -0.01831, 0.19238]), [-0.30534*np.pi/180, -0.81679*np.pi/180, -0.48168*np.pi/180], 0.1)
+        self.ekf = EKF.EKF(dt = 0.1)
 
 
         print('Trying to connect to: ' + str(serial_port) + ' at ' + str(serial_baud) + ' BAUD.')
@@ -62,7 +63,11 @@ class SerialRead:
         print('Ax: %.5f; Ay: %.5f; Az: %.5f' % (output[0], output[1], output[2]))
         print('Yaw: %.5f; Pitch: %.5f; Roll: %.5f' % num)
 
-        self.file_writer.writerow([time.time() - self.start_time]+list(num))
+        #self.file_writer.writerow([time.time() - self.start_time] + list(num) + list(errors.relative_error([0,0,0], num)) )
+        #self.file_writer.writerow([time.time() - self.start_time] + list(output)+list(num) + list(errors.relative_error([0,0,0], num)) )
+        #self.file_writer.writerow([time.time() - self.start_time] + list(num) )
+        self.file_writer.writerow([time.time() - self.start_time] + list(output) + list(num))
+
 
 
     def back_thread(self):   

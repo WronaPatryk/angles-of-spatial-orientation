@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import csv
 
-def scatter_hist(x, y, ax, ax_histx, ax_histy):
+def scatter_hist(x, y, ax, ax_histx, ax_histy, binwidth):
 
     ax_histx.tick_params(axis="x", labelbottom=False)
     ax_histy.tick_params(axis="y", labelleft=False)
@@ -16,7 +16,7 @@ def scatter_hist(x, y, ax, ax_histx, ax_histy):
     ax.scatter(x, y, s=0.1)
     
 
-    binwidth = 1
+    binwidth = binwidth
     xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
     lim = (int(xymax/binwidth) + 1) * binwidth
 
@@ -39,20 +39,20 @@ def scatter_hist(x, y, ax, ax_histx, ax_histy):
     ax_histy.set_title(r'$\mu=%.5f$, $\sigma=%.5f$' % (mean_y, std_y))
     
     ax.scatter(mean_x, mean_y, c='red', s=50, marker='x')
-    ax.set_xlabel("errorX")
-    ax.set_ylabel("errorY")
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
 
 
 
 
 
-def plot_analyse(inpath):
+def plot_analyse(inpath, binwidth):
     file_reader = csv.reader(open(inpath) , delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
     lsterrorX = []
     lsterrorY = []
     for row in file_reader:
-        errorX = float(row[1])
-        errorY = float(row[2])
+        errorX = float(row[0])
+        errorY = float(row[1])
 
         lsterrorX.append(errorX)
         lsterrorY.append(errorY)
@@ -75,8 +75,11 @@ def plot_analyse(inpath):
     ax_histx = fig.add_axes(rect_histx, sharex=ax)
     ax_histy = fig.add_axes(rect_histy, sharey=ax)
 
-    scatter_hist(lsterrorX, lsterrorY, ax, ax_histx, ax_histy)
+    scatter_hist(lsterrorX, lsterrorY, ax, ax_histx, ax_histy, binwidth)
 
     plt.show()
 
-plot_analyse('data/test2.csv')
+#plot_analyse('data/test2.csv')
+
+#plot_analyse('data/Aoutput.csv', 0.1)
+#plot_analyse('data/Gtestdata2.csv', 0.01)

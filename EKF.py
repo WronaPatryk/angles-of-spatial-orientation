@@ -28,11 +28,11 @@ def getRotMat(q):
 def getEulerAngles(q):
     m = getRotMat(q)
     test = -m[2, 0]
-    if test > 0.99999:
+    if test > 0.9999999999:
         yaw = 0
         pitch = np.pi / 2
         roll = np.arctan2(m[0, 1], m[0, 2])
-    elif test < -0.99999:
+    elif test < -0.9999999999:
         yaw = 0
         pitch = -np.pi / 2
         roll = np.arctan2(-m[0, 1], -m[0, 2])
@@ -41,11 +41,38 @@ def getEulerAngles(q):
         pitch = np.arcsin(-m[2, 0])
         roll = np.arctan2(m[2, 1], m[2, 2])
 
-    yaw = rad2deg(yaw)
+    yaw = rad2deg(yaw) 
     pitch = rad2deg(pitch)
     roll = rad2deg(roll)
 
-    return yaw+180, pitch+180, roll+180
+    return yaw, pitch, roll
+
+
+# def CGH(q):
+#     return np.array([[2 * (q[0]**2 + q[1]**2) - 1,     2 * (q[1] * q[2] - q[0]*q[3]),    2 * (q[1] * q[3] + q[0]*q[2])],
+#                      [2 * (q[1] * q[2] + q[0]*q[3]),   2 * (q[0]**2 + q[2]**2) - 1 ,     2 *(q[2] * q[3] - q[0]*q[1])],
+#                      [2 * (q[1] * q[3] - q[0]*q[2]),   2 *(q[2] * q[3] + q[0]*q[1]),     2 * (q[0]**2 + q[3]**2) - 1]]) 
+
+
+# def TFP(CGH):
+#    def THETA(CGH):
+#        return np.arcsin(- CGH[0][2])
+   
+#    def FI(CGH):
+#        return -2 * np.arctan(CGH[1][2]/(CGH[2][2] + np.cos(np.arcsin(- CGH[0][2]))))
+    
+#    def PSI(CGH):
+#        return -2 * np.arctan(CGH[0][1]/(CGH[0][0] + np.cos(np.arcsin(- CGH[0][2]))))
+   
+#    return [THETA(CGH), PSI(CGH), FI(CGH)]
+
+
+# def getEulerAngles(q):
+#     cgh = CGH(q)
+
+#     angs = TFP(cgh)
+
+#     return rad2deg(angs[1]), rad2deg(angs[0]), rad2deg(angs[2])
 
 def normalize_quat(q):
         mag = (q[0]**2 + q[1]**2 + q[2]**2 + q[3]**2)**0.5
@@ -66,7 +93,13 @@ def S_quat(q):
 
 class EKF():
 
-    def __init__(self, accelref = [0, 0, -1], bias = [0,0,0], dt = 1):
+    def __init__(self, 
+                accelref = [0, 0, -1], 
+                bias = [0,0,0], 
+                dt = 1, 
+                qqgain = 0.01,
+                qbgain = 0.01, 
+                rgain = 0.1):
 
         quaternion = np.array([1, 0, 0, 0])     # Initial estimate of the quaternion
         self.xHat = np.concatenate((quaternion, bias)).transpose()
@@ -74,8 +107,11 @@ class EKF():
         self.yHatBar = np.zeros(3).transpose()
         self.Pk = np.identity(7) * 0.01
 
-        self.Q = np.identity(7) * 0.00001
-        self.R = np.identity(3) * 0.01
+        self.Q = np.concatenate((np.concatenate((np.identity(4) *qqgain, np.zeros((4,3))), axis=1),
+                        np.concatenate((np.zeros((3, 4)), np.identity(3) * qbgain), axis=1)), 
+                        axis=0)
+
+        self.R = np.identity(3) * rgain
 
         self.dt = dt
 
@@ -91,6 +127,9 @@ class EKF():
 
         self.accelref = np.array(accelref).transpose()
 
+
+    def set_step(self, ndt):
+        self.dt = ndt
 
     #predict funcs
     def A_matrix(self):

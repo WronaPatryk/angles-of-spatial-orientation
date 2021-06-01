@@ -83,3 +83,17 @@ def plot_analyse(inpath, binwidth):
 
 #plot_analyse('data/Aoutput.csv', 0.1)
 #plot_analyse('data/Gtestdata2.csv', 0.01)
+
+
+def normal_chart_2(X, Y1, Y2, Y1t, Y2t):
+
+    plt.style.use('bmh')
+    plt.figure(figsize = (10,10))
+
+    plt.plot( X, Y1, linestyle='-',color='black', markerfacecolor='black', marker='.', markeredgecolor="black", markersize=5)
+    plt.plot( X, Y2, linestyle='-',color='black', markerfacecolor='black', marker='.', markeredgecolor="black", markersize=5)
+    plt.legend([Y1t,Y2t], loc = 1)
+    plt.xlabel("TIME")
+    plt.ylabel("DEG")
+
+    fig = plt.figure(figsize = (20,10))

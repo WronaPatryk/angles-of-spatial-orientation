@@ -32,48 +32,47 @@ class Sensor:
 
         x, y, z = np.random.multivariate_normal(self.gnoise_mu, self.gnoise_std ).T
 
-        return [ omega[0] + omega[0] * x + self.gbias[0]*dt, omega[1] + omega[1]*y + self.gbias[1]*dt , omega[2]+ omega[2]*z + self.gbias[1]*dt]
+        return [ omega[0] + omega[0] * x + self.gbias[0] * dt,
+                 omega[1] + omega[1] * y + self.gbias[1] * dt , 
+                 omega[2] + omega[2] * z + self.gbias[2] * dt]
 
 
     def gen_accel(self, a, dt):
         x, y, z = np.random.multivariate_normal(self.anoise_mu, self.anoise_std ).T
 
-        return [ a[0] +x * a[0] + self.abias[0]*dt, a[1]+y * a[1] + self.abias[1]*dt, a[2] + z * a[2] + self.abias[2]*dt]
+        return [ a[0] + x * a[0] + self.abias[0] * dt,
+                 a[1] + y * a[1] + self.abias[1] * dt, 
+                 a[2] + z * a[2] + self.abias[2] * dt]
 
-    def get_from_omega(self, omega, bquat, fbquat, dt):
+    def get_from_omega(self, omega, bquat, dt):
 
-        r = 10
-
-        omega = roundlst(omega, r)
 
         ans = quat.quaternion(bquat, omega)
 
         rangs = EKF.getEulerAngles(ans[0])
 
-        fomega = roundlst(self.gen_omega(omega, dt), r)
+        fomega = self.gen_omega(omega, dt)
 
-        fans = quat.quaternion(fbquat, fomega)
 
-        raccel = roundlst(vmath.nvec(rangs), r)
+        raccel = vmath.nvec(rangs)
 
-        faccel = roundlst(self.gen_accel(raccel, dt),r)
+        faccel = self.gen_accel(raccel, dt)
 
-        return (ans[0],fans[0], fomega, faccel,raccel, rangs)
+        return (ans[0], fomega, faccel,raccel, rangs)
 
 
 sim = Sensor() 
 
 def loop_case_test(omega, steps):
     bquat = [1,0,0,0]
-    fbquat = [1,0,0,0]
 
-    ekf = EKF.EKF()
+    ekf = EKF.EKF(dt = 1, qqgain=0.01, qbgain = 1, rgain=0.01)
 
     file_writer = csv.writer(open('data/test2.csv', mode='w'), delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
     for dt in range(steps):
 
-        bquat, fbquat, fomega, faccel, raccel, rangs  = sim.get_from_omega(omega, bquat, fbquat,dt)
+        bquat, fomega, faccel, raccel, rangs  = sim.get_from_omega(omega, bquat,dt)
 
 
         ekf.predict(fomega)
@@ -96,4 +95,4 @@ def loop_case_test(omega, steps):
 
 
 
-loop_case_test([1 * np.pi/180, 1 * np.pi/180, 1 * np.pi/180], 3000)
+loop_case_test([1 * np.pi/180, 0 * np.pi/180,  0 * np.pi/180], 90)

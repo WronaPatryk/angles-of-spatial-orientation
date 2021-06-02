@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import csv
+import errors 
 
 def scatter_hist(x, y, ax, ax_histx, ax_histy, binwidth):
 
@@ -82,18 +83,113 @@ def plot_analyse(inpath, binwidth):
 #plot_analyse('data/test2.csv')
 
 #plot_analyse('data/Aoutput.csv', 0.1)
-#plot_analyse('data/Gtestdata2.csv', 0.01)
+plot_analyse('data/Gtestdata2.csv', 0.01)
 
 
-def normal_chart_2(X, Y1, Y2, Y1t, Y2t):
+def normal_chart_2_time(inpath, Y1, Y2, Y1t, Y2t, params):
+
+    file_reader = csv.reader(open(inpath) , delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    lstX = []
+    lstY = []
+    linecount = 0
+    time = []
+    for row in file_reader:
+        linecount += 1
+
+        errorX = float(row[Y1])
+        errorY = float(row[Y2])
+
+        lstX.append(errorX)
+        lstY.append(errorY + errors.cape_error2(errorX, errorY) * params[0])
+
+        time.append(linecount)
 
     plt.style.use('bmh')
     plt.figure(figsize = (10,10))
 
-    plt.plot( X, Y1, linestyle='-',color='black', markerfacecolor='black', marker='.', markeredgecolor="black", markersize=5)
-    plt.plot( X, Y2, linestyle='-',color='black', markerfacecolor='black', marker='.', markeredgecolor="black", markersize=5)
-    plt.legend([Y1t,Y2t], loc = 1)
-    plt.xlabel("TIME")
-    plt.ylabel("DEG")
+    plt.plot( time, lstX, linestyle='-',color='black', markerfacecolor='black', marker='.', markeredgecolor="black", markersize=5)
+    plt.plot( time, lstY, linestyle='-',color='red', markerfacecolor='red', marker='.', markeredgecolor="red", markersize=5)
 
-    fig = plt.figure(figsize = (20,10))
+    plt.legend([Y1t,Y2t], loc = 1)
+    plt.xlabel("TIME[s]")
+    plt.ylabel(params[4])
+
+    plt.ylim(params[1],params[2])
+    plt.xlim(0,linecount)
+
+    plt.title(params[5])
+
+    plt.show()
+
+normal_chart_2_time('data/test2.csv', 2, 5,"ROLL", "ROLL*", [0,0,90, 0, "DEG", "ROLL, ROLL*"])
+    
+
+normal_chart_2_time('data/test2.csv', 2, 5,"ROLL", "ROLL*+ BW * 1000", [1000,0,90, 0, "DEG", "ROLL, ROLL* + BW * 1000"])
+
+normal_chart_2_time('data/test2.csv', 1 ,4, "PITCH", "PITCH*", [0,-0.1,0.1, 0, "DEG", "PITCH, PITCH*"])
+
+def normal_chart_1_time(inpath, Y1, Y1t,  params):
+    file_reader = csv.reader(open(inpath) , delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    lstX = []
+    linecount = 0
+    time = []
+    for row in file_reader:
+        linecount += 1
+
+        errorX = float(row[Y1])
+
+        lstX.append(errorX*params[0])
+
+        time.append(linecount)
+
+    plt.style.use('bmh')
+    plt.figure(figsize = (10,10))
+
+    plt.plot( time, lstX, linestyle='-',color='black', markerfacecolor='black', marker='.', markeredgecolor="black", markersize=5)
+
+    plt.legend([Y1t], loc = 1)
+    plt.xlabel("TIME[s]")
+    plt.ylabel(params[4])
+
+    plt.ylim(params[1],params[2])
+    plt.xlim(0,linecount)
+
+    plt.title(params[5])
+
+    plt.show()
+
+normal_chart_1_time('data/test2.csv', 8, "E_ROLL%", [100,-2,2, 0, "BŁĄD WZGĘDNY[%]", "E_ROLL%"])
+
+
+
+def normal_chart_move(inpath, Y1, Y2, Y1t, Y2t, params):
+    file_reader = csv.reader(open(inpath) , delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    lstX = []
+    lstY = []
+
+    for row in file_reader:
+
+        errorX = float(row[Y1])
+        errorY = float(row[Y2])
+
+        lstX.append(errorX)
+        lstY.append(errorY)
+
+
+    plt.style.use('bmh')
+    plt.figure(figsize = (10,10))
+
+    plt.plot( lstY, lstX, linestyle='-',color='black', markerfacecolor='black', marker='.', markeredgecolor="black", markersize=5)
+
+    plt.legend([Y1t], loc = 1)
+    plt.xlabel(params[6])
+    plt.ylabel(params[4])
+
+    plt.ylim(params[1],params[2])
+    plt.xlim(-0.1,0.1)
+
+    plt.title(params[5])
+
+    plt.show()
+
+normal_chart_move('data/test2.csv', 5, 4, "","", [1,-100,100, 0, "ROLL*", "ROLL*(PITCH*)", "PITCH*" ])

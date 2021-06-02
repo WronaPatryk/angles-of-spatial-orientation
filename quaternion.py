@@ -36,7 +36,7 @@ def qb(wx, wy, wz, dt = 1):
 def qq(qa, qb):
     q0 = qa[0] * qb[0] - qa[1] * qb[1] - qa[2] * qb[2] - qa[3] * qb[3] 
     
-    q1 = qa[0] * qb[1] + qa[1] * qb[2] + qa[2] * qb[3] - qa[3] * qb[2]
+    q1 = qa[0] * qb[1] + qa[1] * qb[0] + qa[2] * qb[3] - qa[3] * qb[2]
     
     q2 = qa[0] * qb[2] - qa[1] * qb[3] + qa[2] * qb[0] + qa[3] * qb[1]
     

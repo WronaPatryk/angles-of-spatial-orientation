@@ -6,7 +6,7 @@ import numpy as np
 import errors
 
 
-def read_case(inpath, outpath, ekf):
+def read_case(inpath, outpath, ekf, params):
 
     start_time = 0
 
@@ -22,7 +22,7 @@ def read_case(inpath, outpath, ekf):
             old_time = 0
         else:
 
-            time = float(row[0])
+            time = float(row[params[0]])
 
             if(time >= start_time):
 
@@ -32,36 +32,36 @@ def read_case(inpath, outpath, ekf):
 
                 old_time = time
 
-                Ax = float(row[4])
-                Ay = float(row[5])
-                Az = float(row[6])
+                Ax = float(row[params[1]])
+                Ay = float(row[params[2]])
+                Az = float(row[params[3]])
 
                 
-                P = float(row[7])
-                Q = float(row[8])
-                R = float(row[9])
+                P = float(row[params[4]])
+                Q = float(row[params[5]])
+                R = float(row[params[6]])
 
-                rangles = (float(row[3]), float(row[1]) , float(row[2]))
+                #rangles = (float(row[3]), float(row[1]) , float(row[2]))
 
                 ekf.predict([P , Q , R ])
                 ekf.update([Ax, Ay, Az])
 
                 num = EKF.getEulerAngles(ekf.xHat[0:4])
 
-                rerror = errors.relative_error(rangles, num)
-                cerror = errors.cape_error(rangles,num)
+                #rerror = errors.relative_error(rangles, num)
+                #cerror = errors.cape_error(rangles,num)
 
                 print('------------------------------')
                 print('Time: %.5f sek; dt: %.5f sek' %(time, dt))
                 print('Gx: %.5f rad/s; Gy: %.5f rad/s; Gz: %.5f rad/s' % (P, Q, R))
                 print('Ax: %.5fg; Ay: %.5fg; Az: %.5fg' % (Ax, Ay, Az))
                 print('Yaw: %.5f; Pitch: %.5f; Roll: %.5f' % num)
-                print('RYaw: %.5f; RPitch: %.5f; RRoll: %.5f' %  rangles)
-                print('EYaw: %.5f; EPitch: %.5f; ERoll: %.5f' %   cerror )
+                #print('RYaw: %.5f; RPitch: %.5f; RRoll: %.5f' %  rangles)
+                #print('EYaw: %.5f; EPitch: %.5f; ERoll: %.5f' %   cerror )
 
-                file_writer.writerow([time]+ list(num) + list(rangles) + list(cerror))
+                file_writer.writerow([time] +[dt] + list(num))
 
-                if(line_count > 2000): break
+                if(line_count > 20000): break
 
             
         line_count += 1
@@ -72,5 +72,5 @@ if __name__ == '__main__':
 
     ekf = EKF.EKF(dt = 0.02, qqgain=0.001, qbgain=0.001, rgain=0.01)
 
-    read_case("data/testdata.csv","data/testout.csv",ekf)
+    read_case("data/GandA.csv","data/testout.csv",ekf, [0, 1, 2, 3, 4, 5, 6 ] )
 

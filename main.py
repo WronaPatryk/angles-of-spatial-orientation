@@ -41,27 +41,27 @@ def read_case(inpath, outpath, ekf, params):
                 Q = float(row[params[5]])
                 R = float(row[params[6]])
 
-                #rangles = (float(row[3]), float(row[1]) , float(row[2]))
+                rangles = (float(row[3]), float(row[1]) , float(row[2]))
 
                 ekf.predict([P , Q , R ])
                 ekf.update([Ax, Ay, Az])
 
                 num = EKF.getEulerAngles(ekf.xHat[0:4])
 
-                #rerror = errors.relative_error(rangles, num)
-                #cerror = errors.cape_error(rangles,num)
+                rerror = errors.relative_error(rangles, num)
+                cerror = errors.cape_error(rangles,num)
 
                 print('------------------------------')
                 print('Time: %.5f sek; dt: %.5f sek' %(time, dt))
                 print('Gx: %.5f rad/s; Gy: %.5f rad/s; Gz: %.5f rad/s' % (P, Q, R))
                 print('Ax: %.5fg; Ay: %.5fg; Az: %.5fg' % (Ax, Ay, Az))
                 print('Yaw: %.5f; Pitch: %.5f; Roll: %.5f' % num)
-                #print('RYaw: %.5f; RPitch: %.5f; RRoll: %.5f' %  rangles)
-                #print('EYaw: %.5f; EPitch: %.5f; ERoll: %.5f' %   cerror )
+                print('RYaw: %.5f; RPitch: %.5f; RRoll: %.5f' %  rangles)
+                print('EYaw: %.5f; EPitch: %.5f; ERoll: %.5f' %   cerror )
 
-                file_writer.writerow([time] +[dt] + list(num))
+                file_writer.writerow([time] +[dt] +list((Ax, Ay, Az)) + list((P, Q, R))+  list(num) + list(rangles) + list(cerror)+list(rerror) )
 
-                if(line_count > 20000): break
+                if(line_count > 2000): break
 
             
         line_count += 1
@@ -70,7 +70,7 @@ def read_case(inpath, outpath, ekf, params):
 
 if __name__ == '__main__':
 
-    ekf = EKF.EKF(dt = 0.02, qqgain=0.001, qbgain=0.001, rgain=0.01)
+    ekf = EKF.EKF(dt = 0.005, qqgain=0.1, qbgain=10, rgain=0.1)
 
-    read_case("data/GandA.csv","data/testout.csv",ekf, [0, 1, 2, 3, 4, 5, 6 ] )
+    read_case("data/testdata2.csv","data/testout2.csv",ekf, [0, 4, 5, 6, 7, 8, 9 ] )
 

@@ -167,7 +167,7 @@ def normal_chart_XY(inpath, Y1, Y2, Y1t, params):
         errorY = float(row[Y2])
 
         lstX.append(errorX)
-        lstY.append(smoll (errorY))
+        lstY.append(errorY)
 
 
     plt.style.use('bmh')
@@ -176,6 +176,44 @@ def normal_chart_XY(inpath, Y1, Y2, Y1t, params):
     plt.plot( lstX, lstY, linestyle='-',color='black', markerfacecolor='black', marker='.', markeredgecolor="black", markersize=1, linewidth=1)
 
     plt.legend([Y1t], loc = 1)
+    plt.xlabel(params[0])
+    plt.ylabel(params[1])
+
+    plt.ylim(params[2],params[3])
+    #plt.xlim(-0.1,0.1)
+
+    plt.axhline(y=np.mean(lstY), linewidth=1, color='#d62728')
+
+    print(np.mean(lstY))
+
+    plt.title(params[4])
+
+    plt.show()
+
+def normal_chart_XYZ(inpath, Y1, Y2, Y1t,Y2t, params):
+    file_reader = csv.reader(open(inpath) , delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    lstX = []
+    lstY = []
+    lstZ = []
+
+    for row in file_reader:
+
+        errorX = float(row[Y1])
+        errorY = float(row[Y2])
+        errorZ = float(row[Y2])
+
+        lstX.append(errorX)
+        lstY.append(errorY)
+        lstZ.append(errorZ)
+
+
+    plt.style.use('bmh')
+    plt.figure(figsize = (10,10))
+
+    plt.plot( lstX, lstY, linestyle='-',color='black', markerfacecolor='black', marker='.', markeredgecolor="black", markersize=1, linewidth=1)
+    plt.plot( lstX, lstZ, linestyle='-',color='red', markerfacecolor='red', marker='.', markeredgecolor="red", markersize=1, linewidth=1)
+
+    plt.legend([Y1t,Y2t], loc = 1)
     plt.xlabel(params[0])
     plt.ylabel(params[1])
 

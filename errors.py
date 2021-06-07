@@ -6,6 +6,12 @@ def cape_error(real,sim):
         return (y-x)/x
     return (apx(real[0], sim[0]),apx(real[1], sim[1]), apx(real[2], sim[2]) )
 
+def cape_error2(real,sim):
+    def apx(x,y):
+        if(x == 0): return 0
+        return (y-x)/x
+    return apx(real, sim) 
+
 def approx_error(real, sim):
     def apx(x,y):
         return abs((y-x)/x)
